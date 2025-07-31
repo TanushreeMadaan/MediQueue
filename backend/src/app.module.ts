@@ -4,11 +4,17 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from '../config/typeorm.config';
 import { AuthModule } from './auth/auth.module';
+import { DoctorModule } from './doctor/doctor.module';
+import { QueueModule } from './queue/queue.module';
+import { AppointmentModule } from './appointment/appointment.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(typeOrmConfig),
     AuthModule,
+    DoctorModule,
+    QueueModule,
+    AppointmentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
