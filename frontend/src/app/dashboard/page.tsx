@@ -8,7 +8,7 @@ import { ListOrdered, Calendar, Stethoscope, Clock, CheckCircle, BarChart } from
 export default function DashboardPage() {
   return (
     <Layout>
-      <div className="space-y-8">
+      <div className="space-y-8 min-h-screen">
         <DashboardStats />
 
         {/* move between comps here */}

@@ -18,8 +18,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className="h-full bg-gray-100 dark:bg-gray-950">
-      <body className={`h-full bg-gray-50 dark:bg-gray-950 ${inter.className}`}>
-       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+<body className={`min-h-screen h-full bg-gray-50 dark:bg-gray-950 ${inter.className}`}>       
+  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
             {children}
           </AuthProvider>

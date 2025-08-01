@@ -1,24 +1,30 @@
-'use client';
+"use client";
 
-import { Fragment } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { X } from 'lucide-react'; 
-import { cn } from '@/lib/utils';
+import { Fragment } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
-export default function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
+export default function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  size = "md",
+}: ModalProps) {
   const sizeClasses = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
+    sm: "max-w-md",
+    md: "max-w-lg",
+    lg: "max-w-2xl",
+    xl: "max-w-4xl",
   };
 
   return (
@@ -34,11 +40,11 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm" />
+          <div className="fixed inset-0 min-h-screen bg-gray-900/60 backdrop-blur-sm dark:bg-black/80" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
+          <div className="flex min-h-screen items-center justify-center p-4 text-center">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -48,14 +54,19 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className={cn(
-                'w-full transform overflow-hidden rounded-xl bg-white p-6 text-left align-middle shadow-xl transition-all',
-                'dark:bg-gray-900 dark:border dark:border-gray-800',
-                sizeClasses[size]
-              )}>
+              <Dialog.Panel
+                className={cn(
+                  "w-full transform overflow-hidden rounded-xl bg-white p-6 text-left align-middle shadow-xl transition-all",
+                  "dark:bg-gray-900 dark:border dark:border-gray-800",
+                  sizeClasses[size]
+                )}
+              >
                 {/* Modal Header */}
                 <div className="flex items-start justify-between">
-                  <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100">
+                  <Dialog.Title
+                    as="h3"
+                    className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100"
+                  >
                     {title}
                   </Dialog.Title>
                   <button
@@ -67,11 +78,9 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
                     <X className="h-6 w-6" />
                   </button>
                 </div>
-                
+
                 {/* Modal Body */}
-                <div className="mt-4">
-                  {children}
-                </div>
+                <div className="mt-4">{children}</div>
               </Dialog.Panel>
             </Transition.Child>
           </div>
