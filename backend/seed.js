@@ -1,93 +1,22 @@
+// seed.js
+
 const mysql = require('mysql2/promise');
+const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 async function seed() {
   const connection = await mysql.createConnection(process.env.DATABASE_URL);
+  console.log('Connected to the database.');
 
-  // Create tables if they don't exist (matching entity schemas)
-  // await connection.query('SET FOREIGN_KEY_CHECKS = 0');
-  //   await connection.query('DROP TABLE IF EXISTS queue');
-  //   await connection.query('DROP TABLE IF EXISTS appointments');
-  //   await connection.query('DROP TABLE IF EXISTS appointment');
-  //   await connection.query('DROP TABLE IF EXISTS doctor');
-  //   await connection.query('DROP TABLE IF EXISTS patient');
-  //   await connection.query('SET FOREIGN_KEY_CHECKS = 1');
-  await connection.query(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      email VARCHAR(255) NOT NULL UNIQUE,
-      password VARCHAR(255) NOT NULL,
-      role VARCHAR(50) NOT NULL DEFAULT 'front_desk',
-      name VARCHAR(255) NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
-  `);
+  // Define the plaintext password and hash it dynamically
+  const plainTextPassword = 'pass123';
+  const saltRounds = 10;
+  console.log(`Hashing the password "${plainTextPassword}"...`);
+  const hashedPassword = await bcrypt.hash(plainTextPassword, saltRounds);
+  console.log('Password hashed successfully.');
 
-  await connection.query(`
-    CREATE TABLE IF NOT EXISTS doctors (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      specialization VARCHAR(255) NOT NULL,
-      gender VARCHAR(10) NOT NULL,
-      location VARCHAR(255) NOT NULL,
-      phone VARCHAR(20) NOT NULL,
-      email VARCHAR(255) NOT NULL,
-      availability JSON,
-      is_available BOOLEAN DEFAULT true,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
-  `);
-
-  await connection.query(`
-    CREATE TABLE IF NOT EXISTS patients (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      phone VARCHAR(20) NOT NULL,
-      email VARCHAR(255),
-      address VARCHAR(255),
-      date_of_birth DATE,
-      gender VARCHAR(10),
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
-  `);
-
-  await connection.query(`
-    CREATE TABLE IF NOT EXISTS appointments (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      patient_id INT NOT NULL,
-      doctor_id INT NOT NULL,
-      appointment_date DATETIME NOT NULL,
-      status ENUM('booked','completed','cancelled','no_show') DEFAULT 'booked',
-      notes TEXT,
-      fee DECIMAL(10,2),
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      FOREIGN KEY (patient_id) REFERENCES patients(id),
-      FOREIGN KEY (doctor_id) REFERENCES doctors(id)
-    );
-  `);
-
-  await connection.query(`
-    CREATE TABLE IF NOT EXISTS queue (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      queue_number INT NOT NULL,
-      patient_id INT NOT NULL,
-      status ENUM('waiting','with_doctor','completed','cancelled') DEFAULT 'waiting',
-      joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      called_at DATETIME,
-      completed_at DATETIME,
-      doctor_id INT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      FOREIGN KEY (patient_id) REFERENCES patients(id),
-      FOREIGN KEY (doctor_id) REFERENCES doctors(id)
-    );
-  `);
-
-  // Clear existing data (optional, for clean slate)
+  // 1. Clean the Database
+  console.log('Truncating all tables...');
   await connection.query('SET FOREIGN_KEY_CHECKS = 0');
   await connection.query('TRUNCATE TABLE queue');
   await connection.query('TRUNCATE TABLE appointments');
@@ -95,48 +24,53 @@ async function seed() {
   await connection.query('TRUNCATE TABLE doctors');
   await connection.query('TRUNCATE TABLE users');
   await connection.query('SET FOREIGN_KEY_CHECKS = 1');
+  console.log('Tables truncated successfully.');
 
-  // Insert Users
+  // 2. Insert Users
+  console.log('Inserting new users...');
+  // We use the dynamically hashed password for all users
   await connection.query(`
-    INSERT INTO users (email, password, role, name) VALUES
-      ('frontdesk1@clinic.com', '$2b$10$qEth6TeUGrx1vs7ipWOo9ulwpu7RFDfAA1S1kzJu0oUIx0zKvpbZi', 'front_desk', 'Front Desk User'),
-      ('admin1@clinic.com', '$2b$10$qEth6TeUGrx1vs7ipWOo9ulwpu7RFDfAA1S1kzJu0oUIx0zKvpbZi', 'admin', 'Admin User')
-  `);
+    INSERT INTO users (name, email, password, role) VALUES
+      ('Charvi', 'charvi@allohealth.care', ?, 'front_desk'),
+      ('Priyanshi', 'priyanshi@allohealth.care', ?, 'front_desk'),
+      ('user1', 'user@example.com', ?, 'front_desk')
+  `, [hashedPassword, hashedPassword, hashedPassword]);
+  console.log('Users inserted.');
 
-  // Insert Doctors
+  // 3. Insert Doctors
+  console.log('Inserting new doctors...');
   await connection.query(`
     INSERT INTO doctors (name, specialization, gender, location, phone, email, availability, is_available) VALUES
-      ('Dr. Alice', 'Cardiology', 'Female', 'Room 101', '111-222-3333', 'alice@clinic.com',
-        '[{"day":"Monday","start_time":"09:00","end_time":"13:00"},{"day":"Wednesday","start_time":"14:00","end_time":"18:00"}]', true),
-      ('Dr. Bob', 'Dermatology', 'Male', 'Room 102', '222-333-4444', 'bob@clinic.com',
-        '[{"day":"Tuesday","start_time":"10:00","end_time":"16:00"}]', true)
+      ('Dr. Emily Carter', 'Pediatrics', 'Female', 'Room 201', '555-0101', 'emily.carter@clinic.com',
+        '[{"day":"Monday","start_time":"09:00","end_time":"17:00"},{"day":"Wednesday","start_time":"09:00","end_time":"17:00"}]', true),
+      ('Dr. Michael Chen', 'Orthopedics', 'Male', 'Room 202', '555-0102', 'michael.chen@clinic.com',
+        '[{"day":"Tuesday","start_time":"10:00","end_time":"18:00"},{"day":"Thursday","start_time":"10:00","end_time":"18:00"}]', true),
+      ('Dr. Anjali Sharma', 'Neurology', 'Female', 'Room 203', '555-0103', 'anjali.sharma@clinic.com',
+        '[{"day":"Friday","start_time":"08:00","end_time":"16:00"}]', true),
+      ('Dr. David Rodriguez', 'Oncology', 'Male', 'Room 301', '555-0104', 'david.rodriguez@clinic.com',
+        '[{"day":"Monday","start_time":"09:30","end_time":"17:30"},{"day":"Tuesday","start_time":"09:30","end_time":"17:30"}]', false),
+      ('Dr. Sophia Lee', 'Dermatology', 'Female', 'Room 302', '555-0105', 'sophia.lee@clinic.com',
+        '[{"day":"Wednesday","start_time":"11:00","end_time":"19:00"},{"day":"Thursday","start_time":"11:00","end_time":"19:00"}]', true)
   `);
+  console.log('Doctors inserted.');
 
-  // Insert Patients
+  // 4. Insert Patients
+  console.log('Inserting new patients...');
   await connection.query(`
     INSERT INTO patients (name, phone, email, address, date_of_birth, gender) VALUES
-      ('John Doe', '1234567890', 'john@example.com', '123 Main St', '1990-01-01', 'Male'),
-      ('Jane Smith', '0987654321', 'jane@example.com', '456 Elm St', '1995-05-15', 'Female')
+      ('Liam Miller', '555-0201', 'liam.miller@example.com', '123 Oak Avenue', '1985-03-12', 'Male'),
+      ('Olivia Davis', '555-0202', 'olivia.davis@example.com', '456 Pine Street', '1992-07-22', 'Female'),
+      ('Noah Garcia', '555-0203', 'noah.garcia@example.com', '789 Maple Drive', '1978-11-05', 'Male'),
+      ('Emma Wilson', '555-0204', 'emma.wilson@example.com', '101 Birch Lane', '2001-01-30', 'Female'),
+      ('James Martinez', '555-0205', 'james.martinez@example.com', '212 Cedar Court', '1988-09-18', 'Male')
   `);
-
-  // Insert Appointments
-  await connection.query(`
-    INSERT INTO appointments (patient_id, doctor_id, appointment_date, status, notes, fee) VALUES
-      (1, 1, '2024-06-01 10:00:00', 'booked', 'First appointment', 100.00),
-      (2, 2, '2024-06-01 11:00:00', 'booked', 'Follow-up', 120.00)
-  `);
-
-  // Insert Queue
-  await connection.query(`
-    INSERT INTO queue (queue_number, patient_id, status, joined_at, doctor_id) VALUES
-      (1, 1, 'waiting', NOW(), 1),
-      (2, 2, 'waiting', NOW(), 2)
-  `);
-
-  console.log('Database updated successfully!');
+  console.log('Patients inserted.');
+  
+  console.log('✅ Database seeded successfully!');
   await connection.end();
 }
 
 seed().catch(err => {
-  console.error('Seeding failed:', err);
+  console.error('❌ Seeding failed:', err);
+  process.exit(1);
 });
