@@ -15,5 +15,5 @@ A web-based application to manage patient queues and doctor appointments at a cl
 - Tailwind CSS
 
 ## Deployment
-- Backend and frontend are deployed separately on .
+- Backend and frontend are deployed separately on Render and Vercel.
 - MySQL database is managed via Railway. 
